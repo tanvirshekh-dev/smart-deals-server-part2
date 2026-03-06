@@ -11,7 +11,9 @@ const port = process.env.PORT || 3000;
 // firebase service account code
 const admin = require("firebase-admin");
 
-const serviceAccount = require("./smart-deals-firebase-admins-key.json");
+// index.js
+const decoded = Buffer.from(process.env.FIREBASE_SERVICE_KEY, "base64").toString("utf8");
+const serviceAccount = JSON.parse(decoded);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -24,7 +26,7 @@ app.use(express.json());
 const verifyFirebaseToken = async (req, res, next) => {
   const authorization = req.headers.authorization;
   if (!authorization) {
-    return res.status(401).send({message: 'unauthorized token'})
+    return res.status(401).send({message: 'unauthorized access'})
   }
   const token = authorization.split(' ')[1];
   try {
@@ -204,8 +206,8 @@ async function run() {
       res.send(result);
     });
 
-    
-    app.get('/bids', verifyJWTToken, async (req, res) => {
+    // bids related api's
+    app.get('/bids', verifyFirebaseToken, async (req, res) => {
       const email = req.query.email;
       const query = {};
       if (email) {
